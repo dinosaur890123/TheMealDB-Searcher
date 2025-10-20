@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Search App</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app-container">
+        <header>
+            <h1>Find a Recipe</h1>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="Search for meals (e.g., 'Bread')">
+                <button id="searchButton">Search</button>
+            </div>
+        </header>
+        <main id="resultsContainer">
+            <div id="placeholder">
+                <p>Your search results will appear here.</p>
+                <p>Try searching for a dish you love!</p>
+            </div>
+        </main>
+    </div>
+    <div id="recipe-modal" class="hidden">
+        <div id="modal-content">
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
