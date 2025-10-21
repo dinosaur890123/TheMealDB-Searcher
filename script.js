@@ -79,5 +79,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
             }
         }
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <h2>${meal.strMeal}</h2>
+                <button id="closeModalButton">&times;</button>
+            </div>
+            <div class="modal-body">
+                <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                <h3>Ingredients</h3>
+                <ul>
+                    ${ingredients.map(ing => `<li>${ing}</li>`).join('')}
+                </ul>
+                <h3>Meal instructions</h3>
+                <p>${meal.strInstructions}</p>
+            </div>
+            `;
+            document.getElementById('closeModalButton').addEventListener('click', () => {
+            recipeModal.classList.add('hidden');
+            document.body.style.overflow = ''; 
+        });
+    }
+    function displayMessage(message) {
+        resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
     }
 });
