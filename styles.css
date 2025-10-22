@@ -42,6 +42,26 @@ header h1 {
 #searchButton:hover {
     background-color: #0056b3;
 }
+.random-container {
+    max-width: 600px;
+    margin: 0.75rem auto 0;
+    display: flex;
+}
+#randomButton {
+    flex-grow: 1;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #24a842;
+    background-color: #24a842;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 200px;
+    align-items: center;
+}
+#randomButton:hover {
+    background-color: #218838;
+}
 #resultsContainer {
     flex-grow: 1;
     padding: 1.5rem;

@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_KEY = '1';
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
     const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
+    const API_URL_RANDOM = `https://www.themealdb.com/api/json/v1/${API_KEY}/random.php`;
     searchButton.addEventListener('click', searchMeals);
     searchInput.addEventListener('keyup', (event) => {
         if (event.key === 'Enter') {
@@ -24,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }
     });
+    document.getElementById('randomButton').addEventListener('click', fetchRandomMeal);
     async function searchMeals() {
         const query = searchInput.value.trim();
         if (!query) {
@@ -38,7 +40,26 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResults(data.meals);
         } catch (error) {
             console.error('Failed to fetch meals:', error);
-            displayMessage('Error fetching recipes. Please try again later.');
+            displayMessage('Eror fetching recipes. Please try again later.');
+        }
+    }
+    async function fetchRandomMeal() {
+        modalContent.innerHTML = '<div>Finding a random recipe...</div>';
+        recipeModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        resultsContainer.innerHTML = '';
+        placeholder.style.display = 'none';
+        try {
+            const response = await fetch(API_URL_RANDOM);
+            const data = await response.json();
+            if (data.meals && data.meals.length > 0) {
+                displayRecipeDetails(data.meals[0]);
+            } else {
+                modalContent.innerHTML = '<div style="text-align: center; color: red;">Could not find a random recipe :( Please try again</div>';
+            } 
+        } catch (error) {
+            console.error('Error fetching random meal:', error);
+            modalContent.innerHTML = '<div style="text-align: center; color: red;">Could not find recipe :( Please try again.</div>';
         }
     }
     function displayResults(meals) {
