@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultsContainer = document.getElementById('resultsContainer');
     const placeholder = document.getElementById('placeholder');
     const recipeModal = document.getElementById('recipe-modal');
-    const modalContent = document.getElementById('modalContent');
+    const modalContent = document.getElementById('modal-content');
     const API_KEY = '1';
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
     const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
@@ -16,8 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     recipeModal.addEventListener('click', (event) => {
         if (event.target === recipeModal) {
-            recipeModal.classList.add('hidden');
-            document.body.style.overflow = '';
+            closeModal();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !recipeModal.classList.contains('hidden')) {
+            closeModal();
         }
     });
     async function searchMeals() {
@@ -102,4 +106,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayMessage(message) {
         resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
     }
+    function closeModal() {
+        recipeModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
 });
+
