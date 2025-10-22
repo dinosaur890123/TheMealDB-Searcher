@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const resultsContainer = document.getElementById('resultsContainer');
     const placeholder = document.getElementById('placeholder');
-    const recipeModal = document.getElementById('recipeModal');
+    const recipeModal = document.getElementById('recipe-modal');
     const modalContent = document.getElementById('modalContent');
     const API_KEY = '1';
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
