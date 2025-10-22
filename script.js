@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const resultsContainer = document.getElementById('resultsContainer');
     const placeholder = document.getElementById('placeholder');
-    const recipeModal = document.getElementById('recipe-modal');
-    const modalContent = document.getElementById('modal-content');
+    const recipeModal = document.getElementById('recipeModal');
+    const modalContent = document.getElementById('modalContent');
     const API_KEY = '1';
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
     const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
@@ -98,10 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p>${meal.strInstructions}</p>
             </div>
             `;
-            document.getElementById('closeModalButton').addEventListener('click', () => {
-            recipeModal.classList.add('hidden');
-            document.body.style.overflow = ''; 
-        });
     }
     function displayMessage(message) {
         resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
