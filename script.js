@@ -174,6 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             addFavourite(mealId);
             button.classList.add('active');
+            showFavouritePopup('Added to favourites');
         }
     }
     function getFavouriteIds() {
@@ -208,6 +209,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function displayMessage(message) {
         resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
+        if (favouriteIds.includes(mealId)) {
+            removeFavourite(mealId);
+            button.classList.remove('active');
+        } else {
+            addFavourite(mealId);
+            button.classList.add('active');
+            showFavouritePopup('Added to favourites');
+        }
     }
 });
 

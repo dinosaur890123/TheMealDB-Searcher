@@ -175,6 +175,25 @@ header h1 {
 .favourite-button.active {
     color: #e63946;
 }
+.favourite-popup {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translate(-50%, -20px);
+    background-color: #28a745;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1001;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    font-size: 1rem;
+    font-weight: 500;
+}
+.favourite-popup.visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
 #closeModalButton:hover {
     color: #292727;
 }
