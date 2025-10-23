@@ -57,10 +57,20 @@ header h1 {
     border-radius: 4px;
     font-size: 1rem;
     width: 200px;
-    align-items: center;
 }
 #randomButton:hover {
     background-color: #218838;
+}
+.favourites-container {
+    max-width: 600px;
+    margin: 0.75rem auto 0;
+    display: flex;
+}
+.favourite-button {
+    background: #218838;
+    border: none;
+    font-size: 1.8rem;
+    color: #d7d4d4;
 }
 #resultsContainer {
     flex-grow: 1;
@@ -122,7 +132,12 @@ header h1 {
     justify-content: space-between;
     align-items: center;
     padding: 1rem;
-    border-bottom: 1px solid #ddd;
+    border-bottom: 1px solid #dad5d5;
+}
+.modal-title-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 .modal-header h2 {
     font-size: 1.5rem;
@@ -133,6 +148,35 @@ header h1 {
     font-size: 2rem;
     cursor: pointer;
     line-height: 1;
+}
+#favouritesButton {
+    flex-grow: 1;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #007bff;
+    background-color: #2975c6;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+.favourite-button {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    cursor: pointer;
+    color: #aea3a3;
+    padding: 0;
+    line-height: 1;
+    transition: color 0.2s;
+}
+.favourite-button:hover {
+    color: #989393;
+}
+.favourite-button.active {
+    color: #e63946;
+}
+#closeModalButton:hover {
+    color: #292727;
 }
 .modal-body {
     padding: 1rem;

@@ -5,11 +5,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const placeholder = document.getElementById('placeholder');
     const recipeModal = document.getElementById('recipeModal');
     const modalContent = document.getElementById('modalContent');
+    const favouritesButton = document.getElementById('favouritesButton');
     const API_KEY = '1';
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
     const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
     const API_URL_RANDOM = `https://www.themealdb.com/api/json/v1/${API_KEY}/random.php`;
     searchButton.addEventListener('click', searchMeals);
+    favouritesButton.addEventListener('click', showFavourites);
+    modalContent.addEventListener('click', (event) => {
+        if (event.target.id === 'closeModalButton' || event.target.closest('#closeModalButton')) {
+            closeModal();
+            return;
+        }
+        const favouriteButton = event.target.closest('.favourite-button');
+        if (favouriteButton) {
+            const mealId = favouriteButton.dataset.id;
+            toggleFavourite(mealId, favouriteButton);
+        }
+    })
     searchInput.addEventListener('keyup', (event) => {
         if (event.key === 'Enter') {
             searchMeals();
@@ -62,6 +75,29 @@ document.addEventListener('DOMContentLoaded', () => {
             modalContent.innerHTML = '<div style="text-align: center; color: red;">Could not find recipe :( Please try again.</div>';
         }
     }
+    async function showFavourites() {
+        placeholder.textContent = 'Loading your favourites...';
+        placeholder.style.display = 'block';
+        resultsContainer.innerHTML = '';
+        const favouriteIds = getFavouriteIds();
+        if (favouriteIds.length === 0) {
+            placeholder.textContent = 'You have no favourite recipes saved.';
+            return;
+        }
+        try {
+            const promises = favouriteIds.map(id => 
+                fetch(`${API_URL_LOOKUP}${id}`)
+                    .then(res => res.json())
+            );
+            const results = await Promise.all(promises);
+            const meals = results.map(res => res.meals[0]);
+            placeholder.style.display = 'none';
+            displayResults(meals);
+        } catch (error) {
+            console.error('Error fetching favourites:', error);
+            placeholder.textContent = 'Error loading your favourites.';
+        }
+    }
     function displayResults(meals) {
         resultsContainer.innerHTML = '';
         if (!meals) {
@@ -96,36 +132,82 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     function displayRecipeDetails(meal) {
+        const favouriteIds = getFavouriteIds();
+        const isFavourite = favouriteIds.includes(meal.idMeal);
+        const activeClass = isFavourite ? 'active' : '';
         const ingredients = [];
         for (let i = 1; i <= 20; i++) {
             if (meal[`strIngredient${i}`]) {
-                ingredients.push(`${meal[`strIngredient${i}`]} - ${meal[`strMeasure${i}`]}`);
+                ingredients.push(`<li>${meal[`strIngredient${i}`]} - ${meal[`strMeasure${i}`]}</li>`);
             } else {
                 break;
             }
         }
         modalContent.innerHTML = `
             <div class="modal-header">
-                <h2>${meal.strMeal}</h2>
+                <div class="modal-title-group">
+                    <h2>${meal.strMeal}</h2>
+                    <button class="favourite-button ${activeClass}" data-id="${meal.idMeal}">
+                        &hearts;
+                    </button>
+                </div>
                 <button id="closeModalButton">&times;</button>
             </div>
             <div class="modal-body">
                 <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
                 <h3>Ingredients</h3>
-                <ul>
-                    ${ingredients.map(ing => `<li>${ing}</li>`).join('')}
-                </ul>
-                <h3>Meal instructions</h3>
-                <p>${meal.strInstructions}</p>
+                <ul>${ingredients.join('')}</ul> 
+                <h3>Instructions</h3>
+                <p>${meal.strInstructions.replace(/\n/g, '<br>')}</p>
             </div>
-            `;
-    }
-    function displayMessage(message) {
-        resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
+        `;
     }
     function closeModal() {
         recipeModal.classList.add('hidden');
         document.body.style.overflow = '';
+    }
+    function toggleFavourite(mealId, button) {
+        const favouriteIds = getFavouriteIds();
+        if (favouriteIds.includes(mealId)) {
+            removeFavourite(mealId);
+            button.classList.remove('active');
+        } else {
+            addFavourite(mealId);
+            button.classList.add('active');
+        }
+    }
+    function getFavouriteIds() {
+        const favourites = localStorage.getItem('favouriteRecipes');
+        return favourites ? JSON.parse(favourites) : [];
+    }
+    function addFavourite(mealId) {
+        const favouriteIds = getFavouriteIds();
+        if (!favouriteIds.includes(mealId)) {
+            favouriteIds.push(mealId);
+            localStorage.setItem('favouriteRecipes', JSON.stringify(favouriteIds));
+        }
+    }
+    function removeFavourite(mealId) {
+        let favouriteIds = getFavouriteIds();
+        favouriteIds = favouriteIds.filter(id => id !== mealId);
+        localStorage.setItem('favouriteRecipes', JSON.stringify(favouriteIds));
+    }
+    function showFavouritePopup(message) {
+        const popup = document.createElement('div');
+        popup.className = 'favourite-popup';
+        popup.textContent = message;
+        document.body.appendChild(popup);
+        void popup.offsetWidth;
+        popup.classList.add('visible');
+        setTimeout(() => {
+            popup.classList.remove('visible');
+        }, 2000);
+        setTimeout(() => {
+            popup.remove();
+        }, 2500);
+    }
+    function displayMessage(message) {
+        resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
     }
 });
 
