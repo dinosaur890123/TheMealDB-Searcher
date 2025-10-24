@@ -221,6 +221,24 @@ header h1 {
     white-space: pre-wrap;
     line-height: 1.6;
 }
+.filter-container {
+    display: flex;
+    gap: 0.75rem;
+    max-width: 600px;
+    margin: 0.75rem auto 0;
+}
+.filter-container select {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #e1dede;
+    border-radius: 4px;
+    font-size: 0.95rem;
+    background-color: white;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
 .hidden {
     display: none !important;
 }

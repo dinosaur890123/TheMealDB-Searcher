@@ -6,10 +6,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const recipeModal = document.getElementById('recipeModal');
     const modalContent = document.getElementById('modalContent');
     const favouritesButton = document.getElementById('favouritesButton');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const cuisineFilter = document.getElementById('cuisineFilter');
     const API_KEY = '1';
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
     const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
     const API_URL_RANDOM = `https://www.themealdb.com/api/json/v1/${API_KEY}/random.php`;
+    const API_URL_LIST_CATEGORIES = `https://www.themealdb.com/api/json/v1/${API_KEY}/list.php?c=list`;
+    const API_URL_LIST_CUISINES = `https://www.themealdb.com/api/json/v1/${API_KEY}/list.php?a=list`;
+    const API_URL_FILTER_CATEGORY = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?c=`;
+    const API_URL_FILTER_CUISINE = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?a=`;
+
     searchButton.addEventListener('click', searchMeals);
     favouritesButton.addEventListener('click', showFavourites);
     modalContent.addEventListener('click', (event) => {
@@ -38,11 +45,62 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }
     });
+    searchInput.addEventListener('input', () => {
+        categoryFilter.value = 'all';
+        cuisineFilter.value = 'all';
+    });
+    categoryFilter.addEventListener('change', () => {
+        searchInput.value = '';
+        cuisineFilter.value = 'all';
+        searchMeals();
+    });
+    cuisineFilter.addEventListener('change', () => {
+        searchInput.value = '';
+        categoryFilter.value = 'all';
+        searchMeals();
+    });
     document.getElementById('randomButton').addEventListener('click', fetchRandomMeal);
+    async function populateFilters() {
+        try {
+            const [categoriesResponse, cuisinesResponse] = await Promise.all([
+                fetch(API_URL_LIST_CATEGORIES),
+                fetch(API_URL_LIST_CUISINES)
+            ]);
+            const categoriesData = await categoriesResponse.json();
+            const cuisinesData = await cuisinesResponse.json();
+            if (categoriesData.meals) {
+                categoriesData.meals.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.strCategory;
+                    option.textContent = category.strCategory;
+                    categoryFilter.appendChild(option);
+                });
+            }
+            if (cuisinesData.meals) {
+                cuisinesData.meals.forEach(cuisine => {
+                    const option = document.createElement('option');
+                    option.value = cuisine.strArea;
+                    option.textContent = cuisine.strArea;
+                    cuisineFilter.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Failed to get filters :(', error);
+        }
+    }
     async function searchMeals() {
         const query = searchInput.value.trim();
-        if (!query) {
-            displayMessage('Please enter a meal to search for.');
+        const category = categoryFilter.value;
+        const cuisine = cuisineFilter.value;
+        let url = '';
+        if (query) {
+            url = `${API_URL_SEARCH}${query}`;
+        } else if (category !== 'all') {
+            url = `${API_URL_FILTER_CATEGORY}${category}`;
+        } else if (cuisine !== 'all') {
+            url = `${API_URL_FILTER_CUISINE}${cuisine}`;
+        } else {
+            displayMessage('Please enter a meal, select a category, or choose a cuisine.');
             return;
         }
         placeholder.style.display = 'none';
@@ -53,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResults(data.meals);
         } catch (error) {
             console.error('Failed to fetch meals:', error);
-            displayMessage('Eror fetching recipes. Please try again later.');
+            displayMessage('Error fetching recipes. Please try again later.');
         }
     }
     async function fetchRandomMeal() {
@@ -74,6 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching random meal:', error);
             modalContent.innerHTML = '<div style="text-align: center; color: red;">Could not find recipe :( Please try again.</div>';
         }
+        if (!meals) {
+            displayMessage(getNoResultsMessage());
+            return;
+        }
+        const grid = document.createElement('div');
     }
     async function showFavourites() {
         placeholder.textContent = 'Loading your favourites...';
@@ -101,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayResults(meals) {
         resultsContainer.innerHTML = '';
         if (!meals) {
-            displayMessage(`No results found for "${searchInput.value}". Please try another search.`);
+            displayMessage(getNoResultsMessage());
             return;
         }
         const grid = document.createElement('div');
@@ -142,6 +205,20 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 break;
             }
+        }
+        let videoHtml = '';
+        if (meal.strYoutube) {
+            const videoUrl = meal.strYoutube.replace("watch?v=", "embed/");
+            videoHtml = `
+                <div class="video-container">
+                    <iframe 
+                        src="${videoUrl}" 
+                        title="YouTube video player" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                </div>`
         }
         modalContent.innerHTML = `
             <div class="modal-header">
@@ -218,5 +295,21 @@ document.addEventListener('DOMContentLoaded', () => {
             showFavouritePopup('Added to favourites');
         }
     }
+    function getNoResultsMessage() {
+        const query = searchInput.value.trim();
+        const category = categoryFilter.value;
+        const cuisine = cuisineFilter.value;
+        if (query) {
+            return `No results found for "${query}". Please try another search.`;
+        }
+        if (category !== 'all') {
+            return `No results found in the "${category}" category.`;
+        }
+        if (cuisine !== 'all') {
+            return `No results found for "${cuisine}" cuisine.`;
+        }
+        return 'No results found.';
+    }
+    populateFilters();
 });
 
