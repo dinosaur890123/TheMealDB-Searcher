@@ -147,6 +147,25 @@ document.addEventListener('DOMContentLoaded', () => {
             displayMessage("Please enter an ingredient to search for.");
             return;
         }
+        searchInput.value = '';
+        categoryFilter.value = 'all';
+        cuisineFilter.value = 'all';
+        const url = API_URL_FILTER_INGREDIENT + query;
+        await fetchAndDisplay(url, query, true);
+    }
+    async function fetchAndDisplay(url, queryForMessage, isIngredientSearch = false) {
+        placeholder.style.display = 'none';
+        resultsContainer.innerHTML = '<div>Searching...</div>';
+        try {
+            const response = await fetch(url); 
+            const data = await response.json();
+            lastSearch.query = queryForMessage;
+            lastSearch.isIngredientSearch = isIngredientSearch;
+            displayResults(data.meals);
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            displayMessage('Sorry, something went wrong :( Please try again.');
+        }
     }
     async function fetchRandomMeal() {
         modalContent.innerHTML = '<div>Finding a random recipe...</div>';
@@ -344,13 +363,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const category = categoryFilter.value;
         const cuisine = cuisineFilter.value;
         if (query) {
-            return `No results found for "${query}". Please try another search.`;
+        if (lastSearch.isIngredientSearch) {
+            return `No results found for ingredient: '${lastSearch.query}'`;
         }
-        if (category !== 'all') {
-            return `No results found in the "${category}" category.`;
-        }
-        if (cuisine !== 'all') {
-            return `No results found for "${cuisine}" cuisine.`;
+        if (lastSearch.query) {
+            return `No results found for: '${lastSearch.query}'`;
         }
         return 'No results found.';
     }
