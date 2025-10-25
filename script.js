@@ -9,7 +9,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoryFilter = document.getElementById('categoryFilter');
     const cuisineFilter = document.getElementById('cuisineFilter');
     const shoppingListButton = document.getElementById('shoppingListButton');
+    const ingredientSearchInput = document.getElementById('ingredientSearchInput');
     const API_KEY = '1';
+    let lastSearch = {query: '', isIngredientSearch: false};
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
     const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
     const API_URL_RANDOM = `https://www.themealdb.com/api/json/v1/${API_KEY}/random.php`;
@@ -132,14 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await fetchAndDisplay(url, currentQuery);
         placeholder.style.display = 'none';
         resultsContainer.innerHTML = '<div>Searching...</div>';
-        try {
-            const response = await fetch(`${API_URL_SEARCH}${query}`);
-            const data = await response.json();
-            displayResults(data.meals);
-        } catch (error) {
-            console.error('Failed to fetch meals:', error);
-            displayMessage('Error fetching recipes. Please try again later.');
-        }
     }
     async function searchByIngredient() {
         const query = ingredientSearchInput.value.trim();
@@ -184,10 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching random meal:', error);
             modalContent.innerHTML = '<div style="text-align: center; color: red;">Could not find recipe :( Please try again.</div>';
-        }
-        if (!meals) {
-            displayMessage(getNoResultsMessage());
-            return;
         }
         const grid = document.createElement('div');
     }
@@ -292,6 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="modal-body">
                 <img src="${meal.strMealThumb}" alt="${meal.strMeal}">
+                ${videoHtml}
                 <h3>Ingredients</h3>
                 <ul>${ingredients.join('')}</ul> 
                 <h3>Instructions</h3>
@@ -311,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             addFavourite(mealId);
             button.classList.add('active');
-            showFavouritePopup('Added to favourites');
+            showNotification('Added to favourites');
         }
     }
     function getFavouriteIds() {
@@ -330,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         favouriteIds = favouriteIds.filter(id => id !== mealId);
         localStorage.setItem('favouriteRecipes', JSON.stringify(favouriteIds));
     }
-    function showNotification(message) {
+    function showNotification(message, isError = false) {
         const popup = document.createElement('div');
         popup.className = 'favourite-popup';
         popup.textContent = message;
@@ -349,25 +340,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function displayMessage(message) {
         resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
-        if (favouriteIds.includes(mealId)) {
-            removeFavourite(mealId);
-            button.classList.remove('active');
-        } else {
-            addFavourite(mealId);
-            button.classList.add('active');
-            showFavouritePopup('Added to favourites');
-        }
     }
     function getNoResultsMessage() {
-        const query = searchInput.value.trim();
-        const category = categoryFilter.value;
-        const cuisine = cuisineFilter.value;
-        if (query) {
         if (lastSearch.isIngredientSearch) {
             return `No results found for ingredient: '${lastSearch.query}'`;
         }
         if (lastSearch.query) {
             return `No results found for: '${lastSearch.query}'`;
+        }
+        const category = categoryFilter.value;
+        const cuisine = cuisineFilter.value;
+        if (category !== 'all') {
+             return `No results found in category: '${category}'`;
+        }
+        if (cuisine !== 'all') {
+            return `No results found for cuisine: '${cuisine}'`;
         }
         return 'No results found.';
     }
