@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const favouritesButton = document.getElementById('favouritesButton');
     const categoryFilter = document.getElementById('categoryFilter');
     const cuisineFilter = document.getElementById('cuisineFilter');
+    const shoppingListButton = document.getElementById('shoppingListButton');
     const API_KEY = '1';
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
     const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
@@ -16,9 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_URL_LIST_CUISINES = `https://www.themealdb.com/api/json/v1/${API_KEY}/list.php?a=list`;
     const API_URL_FILTER_CATEGORY = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?c=`;
     const API_URL_FILTER_CUISINE = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?a=`;
+    const API_URL_FILTER_INGREDIENT = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?i=`;
 
     searchButton.addEventListener('click', searchMeals);
     favouritesButton.addEventListener('click', showFavourites);
+    shoppingListButton.addEventListener('click', showShoppingList);
+    ingredientSearchButton.addEventListener('click', searchByIngredient);
     modalContent.addEventListener('click', (event) => {
         if (event.target.id === 'closeModalButton' || event.target.closest('#closeModalButton')) {
             closeModal();
@@ -29,10 +33,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const mealId = favouriteButton.dataset.id;
             toggleFavourite(mealId, favouriteButton);
         }
+        const addToListButton = event.target.closest('.add-to-list-button');
+        if (addToListButton) {
+            const ingredient = addToListButton.dataset.ingredient;
+            const measure = addToListButton.dataset.measure;
+            addToShoppingList(ingredient, measure);
+        }
+        const removeFromListButton = event.target.closest('.remove-from-list-button');
+        if (removeFromListButton) {
+            const ingredient = removeFromListButton.dataset.ingredient;
+            removeFromShoppingList(ingredient);
+            showShoppingList();
+        }
     })
     searchInput.addEventListener('keyup', (event) => {
         if (event.key === 'Enter') {
             searchMeals();
+        }
+    });
+    ingredientSearchInput.addEventListener('keyup', (event) => {
+        if (event.key === 'Enter') {
+            searchByIngredient();
         }
     });
     recipeModal.addEventListener('click', (event) => {
@@ -93,8 +114,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const category = categoryFilter.value;
         const cuisine = cuisineFilter.value;
         let url = '';
+        let currentQuery = '';
+        ingredientSearchInput.value = '';
         if (query) {
             url = `${API_URL_SEARCH}${query}`;
+            currentQuery = query;
+            categoryFilter.value = 'all';
+            cuisineFilter.value = 'all';
         } else if (category !== 'all') {
             url = `${API_URL_FILTER_CATEGORY}${category}`;
         } else if (cuisine !== 'all') {
@@ -103,6 +129,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayMessage('Please enter a meal, select a category, or choose a cuisine.');
             return;
         }
+        await fetchAndDisplay(url, currentQuery);
         placeholder.style.display = 'none';
         resultsContainer.innerHTML = '<div>Searching...</div>';
         try {
@@ -112,6 +139,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Failed to fetch meals:', error);
             displayMessage('Error fetching recipes. Please try again later.');
+        }
+    }
+    async function searchByIngredient() {
+        const query = ingredientSearchInput.value.trim();
+        if (!query) {
+            displayMessage("Please enter an ingredient to search for.");
+            return;
         }
     }
     async function fetchRandomMeal() {
@@ -201,7 +235,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const ingredients = [];
         for (let i = 1; i <= 20; i++) {
             if (meal[`strIngredient${i}`]) {
-                ingredients.push(`<li>${meal[`strIngredient${i}`]} - ${meal[`strMeasure${i}`]}</li>`);
+                const ingredientName = meal[`strIngredient${i}`];
+                const ingredientMeasure = meal[`strMeasure${i}`];
+                ingredients.push(`
+                    <li class="ingredient-item">
+                        <span>${ingredientName} - ${ingredientMeasure}</span>
+                        <button class="add-to-list-button" data-ingredient="${ingredientName}" data-measure="${ingredientMeasure}">+</button>
+                    </li>
+                `);
             } else {
                 break;
             }
@@ -270,13 +311,16 @@ document.addEventListener('DOMContentLoaded', () => {
         favouriteIds = favouriteIds.filter(id => id !== mealId);
         localStorage.setItem('favouriteRecipes', JSON.stringify(favouriteIds));
     }
-    function showFavouritePopup(message) {
+    function showNotification(message) {
         const popup = document.createElement('div');
         popup.className = 'favourite-popup';
         popup.textContent = message;
         document.body.appendChild(popup);
         void popup.offsetWidth;
         popup.classList.add('visible');
+        if (isError) {
+            popup.style.backgroundColor = '#dc3545';
+        }
         setTimeout(() => {
             popup.classList.remove('visible');
         }, 2000);
@@ -309,6 +353,58 @@ document.addEventListener('DOMContentLoaded', () => {
             return `No results found for "${cuisine}" cuisine.`;
         }
         return 'No results found.';
+    }
+    function getShoppingList() {
+        const list = localStorage.getItem('shoppingList');
+        return list ? JSON.parse(list) : [];
+    }
+    function saveShoppingList(list) {
+        localStorage.setItem('shoppingList', JSON.stringify(list));
+    }
+    function addToShoppingList() {
+        const list = getShoppingList();
+        const isDuplicate = list.some(item => item.ingredient === ingredient);
+        if (isDuplicate) {
+            showNotification('Already on your shopping list', true);
+        } else {
+            list.push({ingredient, measure});
+            saveShoppingList(list);
+            showNotification('Added to shopping list');
+        }
+    }
+    function removeFromShoppingList(ingredient) {
+        let list = getShoppingList();
+        list = list.filter(item => item.ingredient !== ingredient);
+        saveShoppingList(list);
+    }
+    function showShoppingList() {
+        const list = getShoppingList();
+        let listHtml = '';
+        if (list.length === 0) {
+            listHtml = '<p style="text-align: center; margin-top: 2rem;">Your shopping list is empty.</p>';
+        } else {
+            listHtml = list.map(item => `
+                <li class="shopping-list-item">
+                    <span>${item.ingredient} - ${item.measure}</span>
+                    <button class="remove-from-list-button" data-ingredient="${item.ingredient}">Remove</button>
+                </li>
+            `).join('');
+        }
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2>My Shopping List</h2>
+                </div>
+                <button id="closeModalButton">&times;</button>
+            </div>
+            <div class="modal-body shopping-list-modal-body">
+                <ul style="list-style: none; padding: 0;">
+                    ${listHtml}
+                </ul>
+            </div>
+        `;
+        recipeModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
     populateFilters();
 });
