@@ -10,6 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const cuisineFilter = document.getElementById('cuisineFilter');
     const shoppingListButton = document.getElementById('shoppingListButton');
     const ingredientSearchInput = document.getElementById('ingredientSearchInput');
+    const ingredientSearchButton = document.getElementById('ingredientSearchButton');
+    const mealPlanButton = document.getElementById('mealPlanButton');
+    const mealPlanModal = document.getElementById('mealPlanModal');
+    const mealPlanModalContent = document.getElementById('mealPlanModalContent');
     const API_KEY = '1';
     let lastSearch = {query: '', isIngredientSearch: false};
     const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
@@ -25,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
     favouritesButton.addEventListener('click', showFavourites);
     shoppingListButton.addEventListener('click', showShoppingList);
     ingredientSearchButton.addEventListener('click', searchByIngredient);
+    if (mealPlanButton) {
+        mealPlanButton.addEventListener('click', showMealPlanModal);
+    }
     modalContent.addEventListener('click', (event) => {
         if (event.target.id === 'closeModalButton' || event.target.closest('#closeModalButton')) {
             closeModal();
@@ -47,13 +54,38 @@ document.addEventListener('DOMContentLoaded', () => {
             removeFromShoppingList(ingredient);
             showShoppingList();
         }
+        const addToPlanButton = event.target.closest('.add-to-plan-button');
+        if (addToPlanButton) {
+            const mealId = addToPlanButton.dataset.id;
+            const mealName = addToPlanButton.dataset.name;
+            showDaySelector(mealId, mealName); 
+            return;
+        }
+        const daySelectButton = event.target.closest('.day-select-button');
+        if (daySelectButton) {
+            const {day, id, name} = daySelectButton.dataset;
+            addMealToPlan(day, id, name);
+            getRecipeDetails(id); 
+            return;
+        }
+        const backToRecipeButton = event.target.closest('.back-to-recipe-button');
+        if (backToRecipeButton) {
+            getRecipeDetails(backToRecipeButton.dataset.id);
+            return;
+        }
     })
     searchInput.addEventListener('keyup', (event) => {
+        categoryFilter.value = 'all';
+        cuisineFilter.value = 'all';
+        ingredientSearchInput.value = '';
         if (event.key === 'Enter') {
             searchMeals();
         }
     });
     ingredientSearchInput.addEventListener('keyup', (event) => {
+        searchInput.value = '';
+        categoryFilter.value = 'all';
+        cuisineFilter.value = 'all';
         if (event.key === 'Enter') {
             searchByIngredient();
         }
@@ -63,9 +95,43 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal();
         }
     });
+    if (mealPlanModal) {
+        mealPlanModal.addEventListener('click', (event) => {
+            if (event.target === mealPlanModal) {
+                closeMealPlanModal();
+            }
+        });
+    }
+    if (mealPlanModalContent) {
+        mealPlanModalContent.addEventListener('click', (event) => {
+            const closeButton = event.target.closest('#closeMealPlanModalButton');
+            if (closeButton) {
+                closeMealPlanModal();
+                return;
+            }
+            const removeFromPlanButton = event.target.closest('.remove-from-plan-button');
+            if (removeFromPlanButton) {
+                const day = removeFromPlanButton.dataset.day;
+                removeMealFromPlan(day);
+                showMealPlanModal();
+                return;
+            }
+            const mealPlanItem = event.target.closest('.meal-plan-item[data-id]');
+            if (mealPlanItem) {
+                const mealId = mealPlanItem.dataset.id;
+                closeMealPlanModal();
+                getRecipeDetails(mealId);
+                return;
+            }
+        });
+
+    }
     document.addEventListener('keydown', (event) => {
         if (event.key === 'Escape' && !recipeModal.classList.contains('hidden')) {
             closeModal();
+        }
+        if (event.key === 'Escape' && mealPlanModal && !mealPlanModal.classList.contains('hidden')) {
+            closeMealPlanModal();
         }
     });
     searchInput.addEventListener('input', () => {
@@ -75,11 +141,13 @@ document.addEventListener('DOMContentLoaded', () => {
     categoryFilter.addEventListener('change', () => {
         searchInput.value = '';
         cuisineFilter.value = 'all';
+        ingredientSearchInput.value = '';
         searchMeals();
     });
     cuisineFilter.addEventListener('change', () => {
         searchInput.value = '';
         categoryFilter.value = 'all';
+        ingredientSearchInput.value = '';
         searchMeals();
     });
     document.getElementById('randomButton').addEventListener('click', fetchRandomMeal);
@@ -125,7 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
             cuisineFilter.value = 'all';
         } else if (category !== 'all') {
             url = `${API_URL_FILTER_CATEGORY}${category}`;
+            currentQuery = category;
         } else if (cuisine !== 'all') {
+            currentQuery = cuisine;
             url = `${API_URL_FILTER_CUISINE}${cuisine}`;
         } else {
             displayMessage('Please enter a meal, select a category, or choose a cuisine.');
@@ -179,7 +249,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error fetching random meal:', error);
             modalContent.innerHTML = '<div style="text-align: center; color: red;">Could not find recipe :( Please try again.</div>';
         }
-        const grid = document.createElement('div');
     }
     async function showFavourites() {
         placeholder.textContent = 'Loading your favourites...';
@@ -287,6 +356,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 <ul>${ingredients.join('')}</ul> 
                 <h3>Instructions</h3>
                 <p>${meal.strInstructions.replace(/\n/g, '<br>')}</p>
+                <div class="modal-footer-actions">
+                    <button class="add-to-plan-button" data-id="${meal.idMeal}" data-name="${meal.strMeal}">
+                        Add to Meal Plan
+                    </button>
+                </div>
             </div>
         `;
     }
@@ -365,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function saveShoppingList(list) {
         localStorage.setItem('shoppingList', JSON.stringify(list));
     }
-    function addToShoppingList() {
+    function addToShoppingList(ingredient, measure) {
         const list = getShoppingList();
         const isDuplicate = list.some(item => item.ingredient === ingredient);
         if (isDuplicate) {
@@ -410,6 +484,105 @@ document.addEventListener('DOMContentLoaded', () => {
         recipeModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
+    function getMealPlan() {
+        const plan = localStorage.getItem('mealPlan');
+        if (plan) {
+            return JSON.parse(plan);
+        }
+        return {
+            Monday: null,
+            Tuesday: null,
+            Wednesday: null,
+            Thursday: null,
+            Friday: null,
+            Saturday: null,
+            Sunday: null
+        };
+    }
+    function saveMealPlan(plan) {
+        localStorage.setItem('mealPlan', JSON.stringify(plan));
+    }
+    function showMealPlanModal() {
+        if (!mealPlanModal || !mealPlanModalContent) return;
+        const plan = getMealPlan();
+        const days = Object.keys(plan);
+        let planHtml = days.map(day => {
+            const meal = plan[day];
+            let mealHtml = '';
+            if (meal) {
+                mealHtml = `
+                    <div class="meal-plan-item" data-id="${meal.id}">
+                        <h4>${meal.name}</h4>
+                    </div>
+                    <button class="remove-from-plan-button" data-day="${day}">Remove</button>
+                `;
+            } else {
+                mealHtml = '<p class="meal-plan-empty">No meal planned.</p>';
+            }
+            return `
+                <div class="meal-plan-day">
+                    <h3>${day}</h3>
+                    ${mealHtml}
+                </div>
+            `;
+        }).join('');
+        mealPlanModalContent.innerHTML = `
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2>My Weekly Meal Plan</h2>
+                </div>
+                <button id="closeMealPlanModalButton">&times;</button>
+            </div>
+            <div class="modal-body meal-plan-modal-body">
+                ${planHtml}
+            </div>
+        `;
+        mealPlanModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+    function closeMealPlanModal() {
+        if (!mealPlanModal) return;
+        mealPlanModal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+    function showDaySelector(mealId, mealName) {
+        const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        const dayButtons = days.map(day => `
+            <button class="day-select-button" 
+                    data-day="${day}" 
+                    data-id="${mealId}" 
+                    data-name="${mealName}">
+                ${day}
+            </button>
+        `).join('');
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <h2>Add "${mealName}" to...</h2>
+                </div>
+                <button id="closeModalButton">&times;</button>
+            </div>
+            <div class="modal-body day-selector-body">
+                ${dayButtons}
+            </div>
+            <div class="modal-footer-actions">
+                <button class="back-to-recipe-button" data-id="${mealId}">Back to Recipe</button>
+            </div>
+        `;
+    }
+    function addMealToPlan(day, mealId, mealName) {
+        const plan = getMealPlan();
+        plan[day] = {id: mealId, name: mealName};
+        saveMealPlan(plan);
+        showNotification(`Added ${mealName} to ${day}`);
+    }
+    function removeMealFromPlan(day) {
+        const plan = getMealPlan();
+        plan[day] = null;
+        saveMealPlan(plan);
+        showNotification(`Removed meal from ${day}`);
+    }
+
     populateFilters();
 });
 

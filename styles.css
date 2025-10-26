@@ -194,8 +194,64 @@ header h1 {
     opacity: 1;
     transform: translate(-50%, 0);
 }
+.meal-plan-modal-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+.meal-plan-day {
+    background: #ffffff;
+    border: 1px solid #dbd4d4;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+ .meal-plan-day h3 {
+    margin-top: 0;
+    color: #e76f51;
+    border-bottom: none;
+}
+.meal-plan-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.meal-plan-item:hover {
+    background-color: #f0f0f0;
+}
+.remove-from-plan-button {
+    background: #dc3545;
+    color: white;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    margin-top: 10px;
+}
+.remove-from-plan-button:hover {
+    background: #c82333;
+    transform: none;
+}
+.meal-plan-empty {
+    color: #868181;
+    font-style: italic;
+    margin: 0;
+}
+.meal-plan-item h4 {
+    margin: 0;
+    font-weight: 600;
+    color: #3d3a3a;
+}
 #closeModalButton:hover {
     color: #292727;
+}
+.shopping-list-container {
+    max-width: 600px; 
+    margin: 0.75rem auto 0; 
+    display: flex;
 }
 .modal-body {
     padding: 1rem;
