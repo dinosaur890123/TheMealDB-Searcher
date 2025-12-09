@@ -25,15 +25,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const API_URL_FILTER_CUISINE = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?a=`;
     const API_URL_FILTER_INGREDIENT = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?i=`;
 
-    if (searchButton) searchButton.addEventListener('click', searchMeals);
-    if (favouritesButton) favouritesButton.addEventListener('click', showFavourites);
-    if (shoppingListButton) shoppingListButton.addEventListener('click', showShoppingList);
-    if (ingredientSearchButton) ingredientSearchButton.addEventListener('click', searchByIngredient);
+    searchButton.addEventListener('click', searchMeals);
+    favouritesButton.addEventListener('click', showFavourites);
+    shoppingListButton.addEventListener('click', showShoppingList);
+    ingredientSearchButton.addEventListener('click', searchByIngredient);
     if (mealPlanButton) {
         mealPlanButton.addEventListener('click', showMealPlanModal);
     }
-    if (modalContent) {
-        modalContent.addEventListener('click', (event) => {
+    modalContent.addEventListener('click', (event) => {
         if (event.target.id === 'closeModalButton' || event.target.closest('#closeModalButton')) {
             closeModal();
             return;
@@ -74,35 +73,28 @@ document.addEventListener('DOMContentLoaded', () => {
             getRecipeDetails(backToRecipeButton.dataset.id);
             return;
         }
+    })
+    searchInput.addEventListener('keyup', (event) => {
+        categoryFilter.value = 'all';
+        cuisineFilter.value = 'all';
+        ingredientSearchInput.value = '';
+        if (event.key === 'Enter') {
+            searchMeals();
+        }
     });
-    }
-    if (searchInput) {
-        searchInput.addEventListener('keyup', (event) => {
-            categoryFilter.value = 'all';
-            cuisineFilter.value = 'all';
-            ingredientSearchInput.value = '';
-            if (event.key === 'Enter') {
-                searchMeals();
-            }
-        });
-    }
-    if (ingredientSearchInput) {
-        ingredientSearchInput.addEventListener('keyup', (event) => {
-            searchInput.value = '';
-            categoryFilter.value = 'all';
-            cuisineFilter.value = 'all';
-            if (event.key === 'Enter') {
-                searchByIngredient();
-            }
-        });
-    }
-    if (recipeModal) {
-        recipeModal.addEventListener('click', (event) => {
-            if (event.target === recipeModal) {
-                closeModal();
-            }
-        });
-    }
+    ingredientSearchInput.addEventListener('keyup', (event) => {
+        searchInput.value = '';
+        categoryFilter.value = 'all';
+        cuisineFilter.value = 'all';
+        if (event.key === 'Enter') {
+            searchByIngredient();
+        }
+    });
+    recipeModal.addEventListener('click', (event) => {
+        if (event.target === recipeModal) {
+            closeModal();
+        }
+    });
     if (mealPlanModal) {
         mealPlanModal.addEventListener('click', (event) => {
             if (event.target === mealPlanModal) {
@@ -142,30 +134,23 @@ document.addEventListener('DOMContentLoaded', () => {
             closeMealPlanModal();
         }
     });
-    if (searchInput) {
-        searchInput.addEventListener('input', () => {
-            if (categoryFilter) categoryFilter.value = 'all';
-            if (cuisineFilter) cuisineFilter.value = 'all';
-        });
-    }
-    if (categoryFilter) {
-        categoryFilter.addEventListener('change', () => {
-            if (searchInput) searchInput.value = '';
-            if (cuisineFilter) cuisineFilter.value = 'all';
-            if (ingredientSearchInput) ingredientSearchInput.value = '';
-            searchMeals();
-        });
-    }
-    if (cuisineFilter) {
-        cuisineFilter.addEventListener('change', () => {
-            if (searchInput) searchInput.value = '';
-            if (categoryFilter) categoryFilter.value = 'all';
-            if (ingredientSearchInput) ingredientSearchInput.value = '';
-            searchMeals();
-        });
-    }
-    const randomButton = document.getElementById('randomButton');
-    if (randomButton) randomButton.addEventListener('click', fetchRandomMeal);
+    searchInput.addEventListener('input', () => {
+        categoryFilter.value = 'all';
+        cuisineFilter.value = 'all';
+    });
+    categoryFilter.addEventListener('change', () => {
+        searchInput.value = '';
+        cuisineFilter.value = 'all';
+        ingredientSearchInput.value = '';
+        searchMeals();
+    });
+    cuisineFilter.addEventListener('change', () => {
+        searchInput.value = '';
+        categoryFilter.value = 'all';
+        ingredientSearchInput.value = '';
+        searchMeals();
+    });
+    document.getElementById('randomButton').addEventListener('click', fetchRandomMeal);
     async function populateFilters() {
         try {
             const [categoriesResponse, cuisinesResponse] = await Promise.all([
@@ -202,8 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentQuery = '';
         ingredientSearchInput.value = '';
         if (query) {
-            const encoded = encodeURIComponent(query);
-            url = `${API_URL_SEARCH}${encoded}`;
+            url = `${API_URL_SEARCH}${query}`;
             currentQuery = query;
             categoryFilter.value = 'all';
             cuisineFilter.value = 'all';
@@ -230,34 +214,21 @@ document.addEventListener('DOMContentLoaded', () => {
         searchInput.value = '';
         categoryFilter.value = 'all';
         cuisineFilter.value = 'all';
-        const encoded = encodeURIComponent(query);
-        const url = API_URL_FILTER_INGREDIENT + encoded;
+        const url = API_URL_FILTER_INGREDIENT + query;
         await fetchAndDisplay(url, query, true);
     }
     async function fetchAndDisplay(url, queryForMessage, isIngredientSearch = false) {
         placeholder.style.display = 'none';
         resultsContainer.innerHTML = '<div>Searching...</div>';
         try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 10000);
-            const response = await fetch(url, { signal: controller.signal });
-            clearTimeout(timeout);
-            if (!response.ok) throw new Error(`Network error: ${response.status}`);
+            const response = await fetch(url); 
             const data = await response.json();
             lastSearch.query = queryForMessage;
             lastSearch.isIngredientSearch = isIngredientSearch;
-            if (!data || !data.meals) {
-                displayResults(null);
-            } else {
-                displayResults(data.meals);
-            }
+            displayResults(data.meals);
         } catch (error) {
             console.error('Error fetching data:', error);
-            if (error.name === 'AbortError') {
-                displayMessage('The request timed out. Please try again.');
-            } else {
-                displayMessage('Sorry, something went wrong :( Please try again.');
-            }
+            displayMessage('Sorry, something went wrong :( Please try again.');
         }
     }
     async function fetchRandomMeal() {
@@ -614,4 +585,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
     populateFilters();
 });
-
