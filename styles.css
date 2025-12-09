@@ -1,7 +1,9 @@
 body {
     font-family: sans-serif;
     background-color: #f0f2f5;
-    height: 100vh;width: 100vw;
+    height: 100vh;
+    width: 100%;
+    margin: 0;
 }
 #app-container {
     display: flex;
@@ -23,14 +25,14 @@ header h1 {
     max-width: 600px;
     margin: 0 auto;
 }
-#searchInput {
+#searchInput, #ingredientSearchInput {
     flex-grow: 1;
     padding: 0.75rem;
     border: 1px solid #e1dede;
     border-radius: 4px 0 0 4px;
     font-size: 1rem;
 }
-#searchButton {
+#searchButton, #ingredientSearchButton {
     padding: 0.75rem 1.5rem;
     border: 1px solid #007bff;
     background-color: #007bff;
@@ -39,13 +41,16 @@ header h1 {
     border-radius: 0 4px 4px 0;
     font-size: 1rem;
 }
-#searchButton:hover {
+#searchButton:hover, #ingredientSearchButton:hover {
     background-color: #0056b3;
 }
-.random-container {
+.random-container, .favourites-container, .shopping-list-container, .meal-plan-container, .filter-container {
     max-width: 600px;
     margin: 0.75rem auto 0;
     display: flex;
+}
+.filter-container {
+    gap: 0.75rem;
 }
 #randomButton {
     flex-grow: 1;
@@ -56,21 +61,50 @@ header h1 {
     cursor: pointer;
     border-radius: 4px;
     font-size: 1rem;
-    width: 200px;
 }
 #randomButton:hover {
     background-color: #218838;
 }
-.favourites-container {
-    max-width: 600px;
-    margin: 0.75rem auto 0;
-    display: flex;
+#favouritesButton {
+    flex-grow: 1;
+    padding: 0.75rem 1.5rem;
+    border: 1px solid #007bff;
+    background-color: #2975c6;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 100%;
 }
-.favourite-button {
-    background: #218838;
+#shoppingListButton {
+    flex-grow: 1;
+    background-color: #28a745;
+    color: white;
     border: none;
-    font-size: 1.8rem;
-    color: #d7d4d4;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+#shoppingListButton:hover {
+    background-color: #218838;
+}
+#mealPlanButton {
+    flex-grow: 1;
+    background-color: #e76f51;
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s;
+    width: 100%;
+}
+#mealPlanButton:hover {
+    background-color: #d65a3b;
 }
 #resultsContainer {
     flex-grow: 1;
@@ -107,8 +141,9 @@ header h1 {
 .meal-card h3 {
     padding: 1rem;
     font-size: 1.1rem;
+    margin: 0;
 }
-#recipeModal {
+#recipeModal, #mealPlanModal {
     position: fixed;
     inset: 0;
     background-color: rgba(0, 0, 0, 0.6);
@@ -116,8 +151,9 @@ header h1 {
     align-items: center;
     justify-content: center;
     padding: 1rem;
+    z-index: 1000;
 }
-#modalContent {
+#modalContent, #mealPlanModalContent {
     background-color: white;
     border-radius: 8px;
     width: 100%;
@@ -141,23 +177,18 @@ header h1 {
 }
 .modal-header h2 {
     font-size: 1.5rem;
+    margin: 0;
 }
-#closeModalButton {
+#closeModalButton, #closeMealPlanModalButton {
     background: none;
     border: none;
     font-size: 2rem;
     cursor: pointer;
     line-height: 1;
+    color: #666;
 }
-#favouritesButton {
-    flex-grow: 1;
-    padding: 0.75rem 1.5rem;
-    border: 1px solid #007bff;
-    background-color: #2975c6;
-    color: white;
-    cursor: pointer;
-    border-radius: 4px;
-    font-size: 1rem;
+#closeModalButton:hover, #closeMealPlanModalButton:hover {
+    color: #000;
 }
 .favourite-button {
     background: none;
@@ -189,69 +220,12 @@ header h1 {
     transition: opacity 0.5s ease, transform 0.5s ease;
     font-size: 1rem;
     font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
 }
 .favourite-popup.visible {
     opacity: 1;
     transform: translate(-50%, 0);
-}
-.meal-plan-modal-body {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-    padding-bottom: 2rem;
-}
-.meal-plan-day {
-    background: #ffffff;
-    border: 1px solid #dbd4d4;
-    border-radius: 8px;
-    padding: 1.5rem;
-}
- .meal-plan-day h3 {
-    margin-top: 0;
-    color: #e76f51;
-    border-bottom: none;
-}
-.meal-plan-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: #ffffff;
-    padding: 10px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-.meal-plan-item:hover {
-    background-color: #f0f0f0;
-}
-.remove-from-plan-button {
-    background: #dc3545;
-    color: white;
-    font-size: 0.8rem;
-    padding: 5px 10px;
-    margin-top: 10px;
-}
-.remove-from-plan-button:hover {
-    background: #c82333;
-    transform: none;
-}
-.meal-plan-empty {
-    color: #868181;
-    font-style: italic;
-    margin: 0;
-}
-.meal-plan-item h4 {
-    margin: 0;
-    font-weight: 600;
-    color: #3d3a3a;
-}
-#closeModalButton:hover {
-    color: #292727;
-}
-.shopping-list-container {
-    max-width: 600px; 
-    margin: 0.75rem auto 0; 
-    display: flex;
 }
 .modal-body {
     padding: 1rem;
@@ -277,24 +251,6 @@ header h1 {
     white-space: pre-wrap;
     line-height: 1.6;
 }
-.filter-container {
-    display: flex;
-    gap: 0.75rem;
-    max-width: 600px;
-    margin: 0.75rem auto 0;
-}
-.filter-container select {
-    flex-grow: 1;
-    padding: 0.75rem;
-    border: 1px solid #e1dede;
-    border-radius: 4px;
-    font-size: 0.95rem;
-    background-color: white;
-    cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-}
 .video-container {
     position: relative;
     overflow: hidden;
@@ -311,19 +267,14 @@ header h1 {
     height: 100%;
     border: 0;
 }
-#shoppingListButton {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    padding: 0.75rem 1rem;
+.filter-container select {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #e1dede;
     border-radius: 4px;
-    cursor: pointer;
     font-size: 0.95rem;
-    transition: background-color 0.2s;
-    margin-top: 0.5rem;
-}
-#shoppingListButton:hover {
-    background-color: #218838;
+    background-color: white;
+    cursor: pointer;
 }
 .ingredient-item {
     display: flex;
@@ -343,7 +294,7 @@ header h1 {
     cursor: pointer;
     line-height: 28px;
     text-align: center;
-    transition: backgr =ound-color 0.2s;
+    transition: background-color 0.2s;
     padding: 0;
 }
 .add-to-list-button:hover {
@@ -354,7 +305,7 @@ header h1 {
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 0;
-    border-bottom: 1px solid #ffffff;
+    border-bottom: 1px solid #e1dede;
 }
 .remove-from-list-button {
     background-color: #d52738;
@@ -369,6 +320,89 @@ header h1 {
 }
 .remove-from-list-button:hover {
     background-color: #c82333;
+}
+.meal-plan-modal-body {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+.meal-plan-day {
+    background: #ffffff;
+    border: 1px solid #dbd4d4;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+.meal-plan-day h3 {
+    margin-top: 0;
+    color: #e76f51;
+    border-bottom: none;
+}
+.meal-plan-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.meal-plan-item:hover {
+    background-color: #f0f0f0;
+}
+.remove-from-plan-button {
+    background: #dc3545;
+    color: white;
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.remove-from-plan-button:hover {
+    background: #c82333;
+}
+.meal-plan-empty {
+    color: #868181;
+    font-style: italic;
+    margin: 0;
+}
+.day-selector-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+.day-select-button {
+    background-color: #f8f9fa;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.day-select-button:hover {
+    background-color: #e2e6ea;
+    border-color: #ccc;
+}
+.modal-footer-actions {
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+.add-to-plan-button, .back-to-recipe-button {
+    background-color: #e76f51;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+.add-to-plan-button:hover, .back-to-recipe-button:hover {
+    background-color: #d65a3b;
 }
 .hidden {
     display: none !important;

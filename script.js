@@ -14,46 +14,58 @@ document.addEventListener('DOMContentLoaded', () => {
     const mealPlanButton = document.getElementById('mealPlanButton');
     const mealPlanModal = document.getElementById('mealPlanModal');
     const mealPlanModalContent = document.getElementById('mealPlanModalContent');
-    const API_KEY = '1';
+
+    const API_KEY = '1'; 
+    const API_BASE = `https://www.themealdb.com/api/json/v1/${API_KEY}`;
+    const API_URL_SEARCH = `${API_BASE}/search.php?s=`;
+    const API_URL_LOOKUP = `${API_BASE}/lookup.php?i=`;
+    const API_URL_RANDOM = `${API_BASE}/random.php`;
+    const API_URL_LIST_CATEGORIES = `${API_BASE}/list.php?c=list`;
+    const API_URL_LIST_CUISINES = `${API_BASE}/list.php?a=list`;
+    const API_URL_FILTER_CATEGORY = `${API_BASE}/filter.php?c=`;
+    const API_URL_FILTER_CUISINE = `${API_BASE}/filter.php?a=`;
+    const API_URL_FILTER_INGREDIENT = `${API_BASE}/filter.php?i=`;
+
     let lastSearch = {query: '', isIngredientSearch: false};
-    const API_URL_SEARCH = `https://www.themealdb.com/api/json/v1/${API_KEY}/search.php?s=`;
-    const API_URL_LOOKUP = `https://www.themealdb.com/api/json/v1/${API_KEY}/lookup.php?i=`;
-    const API_URL_RANDOM = `https://www.themealdb.com/api/json/v1/${API_KEY}/random.php`;
-    const API_URL_LIST_CATEGORIES = `https://www.themealdb.com/api/json/v1/${API_KEY}/list.php?c=list`;
-    const API_URL_LIST_CUISINES = `https://www.themealdb.com/api/json/v1/${API_KEY}/list.php?a=list`;
-    const API_URL_FILTER_CATEGORY = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?c=`;
-    const API_URL_FILTER_CUISINE = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?a=`;
-    const API_URL_FILTER_INGREDIENT = `https://www.themealdb.com/api/json/v1/${API_KEY}/filter.php?i=`;
 
     searchButton.addEventListener('click', searchMeals);
     favouritesButton.addEventListener('click', showFavourites);
     shoppingListButton.addEventListener('click', showShoppingList);
     ingredientSearchButton.addEventListener('click', searchByIngredient);
+    
     if (mealPlanButton) {
         mealPlanButton.addEventListener('click', showMealPlanModal);
     }
+
     modalContent.addEventListener('click', (event) => {
         if (event.target.id === 'closeModalButton' || event.target.closest('#closeModalButton')) {
             closeModal();
             return;
         }
+        
         const favouriteButton = event.target.closest('.favourite-button');
         if (favouriteButton) {
             const mealId = favouriteButton.dataset.id;
             toggleFavourite(mealId, favouriteButton);
+            return;
         }
+
         const addToListButton = event.target.closest('.add-to-list-button');
         if (addToListButton) {
             const ingredient = addToListButton.dataset.ingredient;
             const measure = addToListButton.dataset.measure;
             addToShoppingList(ingredient, measure);
+            return;
         }
+
         const removeFromListButton = event.target.closest('.remove-from-list-button');
         if (removeFromListButton) {
             const ingredient = removeFromListButton.dataset.ingredient;
             removeFromShoppingList(ingredient);
-            showShoppingList();
+            showShoppingList(); 
+            return;
         }
+
         const addToPlanButton = event.target.closest('.add-to-plan-button');
         if (addToPlanButton) {
             const mealId = addToPlanButton.dataset.id;
@@ -61,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showDaySelector(mealId, mealName); 
             return;
         }
+
         const daySelectButton = event.target.closest('.day-select-button');
         if (daySelectButton) {
             const {day, id, name} = daySelectButton.dataset;
@@ -68,44 +81,41 @@ document.addEventListener('DOMContentLoaded', () => {
             getRecipeDetails(id); 
             return;
         }
+
         const backToRecipeButton = event.target.closest('.back-to-recipe-button');
         if (backToRecipeButton) {
             getRecipeDetails(backToRecipeButton.dataset.id);
             return;
         }
-    })
+    });
+
     searchInput.addEventListener('keyup', (event) => {
         categoryFilter.value = 'all';
         cuisineFilter.value = 'all';
         ingredientSearchInput.value = '';
-        if (event.key === 'Enter') {
-            searchMeals();
-        }
+        if (event.key === 'Enter') searchMeals();
     });
+
     ingredientSearchInput.addEventListener('keyup', (event) => {
         searchInput.value = '';
         categoryFilter.value = 'all';
         cuisineFilter.value = 'all';
-        if (event.key === 'Enter') {
-            searchByIngredient();
-        }
+        if (event.key === 'Enter') searchByIngredient();
     });
+
     recipeModal.addEventListener('click', (event) => {
-        if (event.target === recipeModal) {
-            closeModal();
-        }
+        if (event.target === recipeModal) closeModal();
     });
+
     if (mealPlanModal) {
         mealPlanModal.addEventListener('click', (event) => {
-            if (event.target === mealPlanModal) {
-                closeMealPlanModal();
-            }
+            if (event.target === mealPlanModal) closeMealPlanModal();
         });
     }
+
     if (mealPlanModalContent) {
         mealPlanModalContent.addEventListener('click', (event) => {
-            const closeButton = event.target.closest('#closeMealPlanModalButton');
-            if (closeButton) {
+            if (event.target.closest('#closeMealPlanModalButton')) {
                 closeMealPlanModal();
                 return;
             }
@@ -113,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (removeFromPlanButton) {
                 const day = removeFromPlanButton.dataset.day;
                 removeMealFromPlan(day);
-                showMealPlanModal();
+                showMealPlanModal(); 
                 return;
             }
             const mealPlanItem = event.target.closest('.meal-plan-item[data-id]');
@@ -124,33 +134,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
         });
-
     }
+
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && !recipeModal.classList.contains('hidden')) {
-            closeModal();
-        }
-        if (event.key === 'Escape' && mealPlanModal && !mealPlanModal.classList.contains('hidden')) {
-            closeMealPlanModal();
+        if (event.key === 'Escape') {
+            if (!recipeModal.classList.contains('hidden')) closeModal();
+            if (mealPlanModal && !mealPlanModal.classList.contains('hidden')) closeMealPlanModal();
         }
     });
+
     searchInput.addEventListener('input', () => {
         categoryFilter.value = 'all';
         cuisineFilter.value = 'all';
     });
+
     categoryFilter.addEventListener('change', () => {
         searchInput.value = '';
         cuisineFilter.value = 'all';
         ingredientSearchInput.value = '';
         searchMeals();
     });
+
     cuisineFilter.addEventListener('change', () => {
         searchInput.value = '';
         categoryFilter.value = 'all';
         ingredientSearchInput.value = '';
         searchMeals();
     });
+
     document.getElementById('randomButton').addEventListener('click', fetchRandomMeal);
+
     async function populateFilters() {
         try {
             const [categoriesResponse, cuisinesResponse] = await Promise.all([
@@ -159,6 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ]);
             const categoriesData = await categoriesResponse.json();
             const cuisinesData = await cuisinesResponse.json();
+
             if (categoriesData.meals) {
                 categoriesData.meals.forEach(category => {
                     const option = document.createElement('option');
@@ -176,16 +190,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
         } catch (error) {
-            console.error('Failed to get filters :(', error);
+            console.error('Failed to get filters:', error);
         }
     }
+
     async function searchMeals() {
         const query = searchInput.value.trim();
         const category = categoryFilter.value;
         const cuisine = cuisineFilter.value;
         let url = '';
         let currentQuery = '';
-        ingredientSearchInput.value = '';
+        
+        ingredientSearchInput.value = ''; 
+
         if (query) {
             url = `${API_URL_SEARCH}${query}`;
             currentQuery = query;
@@ -205,6 +222,7 @@ document.addEventListener('DOMContentLoaded', () => {
         placeholder.style.display = 'none';
         resultsContainer.innerHTML = '<div>Searching...</div>';
     }
+
     async function searchByIngredient() {
         const query = ingredientSearchInput.value.trim();
         if (!query) {
@@ -217,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const url = API_URL_FILTER_INGREDIENT + query;
         await fetchAndDisplay(url, query, true);
     }
+
     async function fetchAndDisplay(url, queryForMessage, isIngredientSearch = false) {
         placeholder.style.display = 'none';
         resultsContainer.innerHTML = '<div>Searching...</div>';
@@ -231,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayMessage('Sorry, something went wrong :( Please try again.');
         }
     }
+
     async function fetchRandomMeal() {
         modalContent.innerHTML = '<div>Finding a random recipe...</div>';
         recipeModal.classList.remove('hidden');
@@ -250,22 +270,25 @@ document.addEventListener('DOMContentLoaded', () => {
             modalContent.innerHTML = '<div style="text-align: center; color: red;">Could not find recipe :( Please try again.</div>';
         }
     }
+
     async function showFavourites() {
         placeholder.textContent = 'Loading your favourites...';
         placeholder.style.display = 'block';
         resultsContainer.innerHTML = '';
+        
         const favouriteIds = getFavouriteIds();
         if (favouriteIds.length === 0) {
             placeholder.textContent = 'You have no favourite recipes saved.';
             return;
         }
+
         try {
             const promises = favouriteIds.map(id => 
-                fetch(`${API_URL_LOOKUP}${id}`)
-                    .then(res => res.json())
+                fetch(`${API_URL_LOOKUP}${id}`).then(res => res.json())
             );
             const results = await Promise.all(promises);
-            const meals = results.map(res => res.meals[0]);
+            const meals = results.filter(res => res.meals).map(res => res.meals[0]);
+            
             placeholder.style.display = 'none';
             displayResults(meals);
         } catch (error) {
@@ -273,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             placeholder.textContent = 'Error loading your favourites.';
         }
     }
+
     function displayResults(meals) {
         resultsContainer.innerHTML = '';
         if (!meals) {
@@ -293,6 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         resultsContainer.appendChild(grid);
     }
+
     async function getRecipeDetails(mealId) {
         modalContent.innerHTML = '<div>Loading recipe...</div>';
         recipeModal.classList.remove('hidden');
@@ -306,15 +331,16 @@ document.addEventListener('DOMContentLoaded', () => {
             modalContent.innerHTML = '<div style="padding: 2rem; text-align: center; color: red;">Could not load the recipe. Please retry :(.</div>';
         }
     }
+
     function displayRecipeDetails(meal) {
         const favouriteIds = getFavouriteIds();
         const isFavourite = favouriteIds.includes(meal.idMeal);
         const activeClass = isFavourite ? 'active' : '';
         const ingredients = [];
         for (let i = 1; i <= 20; i++) {
-            if (meal[`strIngredient${i}`]) {
+            if (meal[`strIngredient${i}`] && meal[`strIngredient${i}`].trim() !== "") {
                 const ingredientName = meal[`strIngredient${i}`];
-                const ingredientMeasure = meal[`strMeasure${i}`];
+                const ingredientMeasure = meal[`strMeasure${i}`] || "";
                 ingredients.push(`
                     <li class="ingredient-item">
                         <span>${ingredientName} - ${ingredientMeasure}</span>
@@ -322,9 +348,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </li>
                 `);
             } else {
-                break;
+                continue; 
             }
         }
+        
         let videoHtml = '';
         if (meal.strYoutube) {
             const videoUrl = meal.strYoutube.replace("watch?v=", "embed/");
@@ -337,8 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen>
                     </iframe>
-                </div>`
+                </div>`;
         }
+        
         modalContent.innerHTML = `
             <div class="modal-header">
                 <div class="modal-title-group">
@@ -364,10 +392,12 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
+
     function closeModal() {
         recipeModal.classList.add('hidden');
         document.body.style.overflow = '';
     }
+
     function toggleFavourite(mealId, button) {
         const favouriteIds = getFavouriteIds();
         if (favouriteIds.includes(mealId)) {
@@ -379,10 +409,12 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification('Added to favourites');
         }
     }
+
     function getFavouriteIds() {
         const favourites = localStorage.getItem('favouriteRecipes');
         return favourites ? JSON.parse(favourites) : [];
     }
+
     function addFavourite(mealId) {
         const favouriteIds = getFavouriteIds();
         if (!favouriteIds.includes(mealId)) {
@@ -390,17 +422,21 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('favouriteRecipes', JSON.stringify(favouriteIds));
         }
     }
+
     function removeFavourite(mealId) {
         let favouriteIds = getFavouriteIds();
         favouriteIds = favouriteIds.filter(id => id !== mealId);
         localStorage.setItem('favouriteRecipes', JSON.stringify(favouriteIds));
     }
+
     function showNotification(message, isError = false) {
         const popup = document.createElement('div');
         popup.className = 'favourite-popup';
         popup.textContent = message;
         document.body.appendChild(popup);
+        
         void popup.offsetWidth;
+        
         popup.classList.add('visible');
         if (isError) {
             popup.style.backgroundColor = '#dc3545';
@@ -412,9 +448,11 @@ document.addEventListener('DOMContentLoaded', () => {
             popup.remove();
         }, 2500);
     }
+
     function displayMessage(message) {
         resultsContainer.innerHTML = `<div style="text-align: center; color: #6b6767; margin-top: 4rem;">${message}</div>`;
     }
+
     function getNoResultsMessage() {
         if (lastSearch.isIngredientSearch) {
             return `No results found for ingredient: '${lastSearch.query}'`;
@@ -432,13 +470,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return 'No results found.';
     }
+
     function getShoppingList() {
         const list = localStorage.getItem('shoppingList');
         return list ? JSON.parse(list) : [];
     }
+
     function saveShoppingList(list) {
         localStorage.setItem('shoppingList', JSON.stringify(list));
     }
+
     function addToShoppingList(ingredient, measure) {
         const list = getShoppingList();
         const isDuplicate = list.some(item => item.ingredient === ingredient);
@@ -450,11 +491,13 @@ document.addEventListener('DOMContentLoaded', () => {
             showNotification('Added to shopping list');
         }
     }
+
     function removeFromShoppingList(ingredient) {
         let list = getShoppingList();
         list = list.filter(item => item.ingredient !== ingredient);
         saveShoppingList(list);
     }
+
     function showShoppingList() {
         const list = getShoppingList();
         let listHtml = '';
@@ -484,6 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
         recipeModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
+
     function getMealPlan() {
         const plan = localStorage.getItem('mealPlan');
         if (plan) {
@@ -499,13 +543,16 @@ document.addEventListener('DOMContentLoaded', () => {
             Sunday: null
         };
     }
+
     function saveMealPlan(plan) {
         localStorage.setItem('mealPlan', JSON.stringify(plan));
     }
+
     function showMealPlanModal() {
         if (!mealPlanModal || !mealPlanModalContent) return;
         const plan = getMealPlan();
         const days = Object.keys(plan);
+        
         let planHtml = days.map(day => {
             const meal = plan[day];
             let mealHtml = '';
@@ -526,6 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
         }).join('');
+
         mealPlanModalContent.innerHTML = `
             <div class="modal-header">
                 <div class="modal-title-group">
@@ -540,11 +588,13 @@ document.addEventListener('DOMContentLoaded', () => {
         mealPlanModal.classList.remove('hidden');
         document.body.style.overflow = 'hidden';
     }
+
     function closeMealPlanModal() {
         if (!mealPlanModal) return;
         mealPlanModal.classList.add('hidden');
         document.body.style.overflow = '';
     }
+
     function showDaySelector(mealId, mealName) {
         const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
         const dayButtons = days.map(day => `
@@ -555,6 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${day}
             </button>
         `).join('');
+
         modalContent.innerHTML = `
             <div class="modal-header">
                 <div class="modal-title-group">
@@ -570,12 +621,14 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
+
     function addMealToPlan(day, mealId, mealName) {
         const plan = getMealPlan();
         plan[day] = {id: mealId, name: mealName};
         saveMealPlan(plan);
         showNotification(`Added ${mealName} to ${day}`);
     }
+
     function removeMealFromPlan(day) {
         const plan = getMealPlan();
         plan[day] = null;
