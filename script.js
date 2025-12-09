@@ -219,8 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         await fetchAndDisplay(url, currentQuery);
-        placeholder.style.display = 'none';
-        resultsContainer.innerHTML = '<div>Searching...</div>';
     }
 
     async function searchByIngredient() {
